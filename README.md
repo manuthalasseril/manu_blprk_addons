@@ -1,2 +1,1 @@
-# odoo_addons
-Odoo Addons
+# stock_exchange
