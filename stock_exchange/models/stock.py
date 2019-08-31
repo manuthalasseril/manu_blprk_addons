@@ -53,7 +53,7 @@ class StockPicking(models.Model):
                 'exchange_pickings_count': len(picking.exchange_picking_ids),
             })
 
-    org_picking_id = fields.Many2one(related="sale_id.org_picking_id", string="Origin Picking", store=True, readonly=False)
+    org_picking_id = fields.Many2one(related="sale_id.org_picking_id", string="Original Sale Picking", store=True, readonly=False)
     exchange_picking_ids = fields.One2many('stock.picking', 'org_picking_id', string='Exchange Order Pickings', readonly=False)
     exchange_pickings_count = fields.Integer(string='Exchange Order Pickings Count', compute='_get_exchange_data', readonly=True)    
 
