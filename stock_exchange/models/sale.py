@@ -77,6 +77,7 @@ class StockExchange(models.Model):
 
     @api.multi
     def action_view_exchange(self):
+        self.ensure_one()
         ctx = dict(self._context)
         ctx['show_exchange_order'] = ctx.get('show_exchange_order', True)  
         exchange_orders = self.sudo().with_context(ctx).search([('org_order_id', '=', self.id)])
@@ -92,6 +93,7 @@ class StockExchange(models.Model):
 
     @api.multi
     def action_view_exchange_delivery(self):
+        self.ensure_one()
         ctx = dict(self._context)
         ctx['show_exchange_order'] = ctx.get('show_exchange_order', True)  
         exchange_orders = self.sudo().with_context(ctx).search([('org_order_id', '=', self.id)])
@@ -106,6 +108,7 @@ class StockExchange(models.Model):
 
     @api.multi
     def action_view_exchange_invoice(self):
+        self.ensure_one()
         ctx = dict(self._context)
         ctx['show_exchange_order'] = ctx.get('show_exchange_order', True)  
         exchange_orders = self.sudo().with_context(ctx).search([('org_order_id', '=', self.id)])

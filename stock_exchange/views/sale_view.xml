@@ -30,13 +30,29 @@
 		</field>
 	</record>
 
-	<record id="view_picking_form_inherit_exchange" model="ir.ui.view">
+	<record id="view_picking_form_inherit_exchange"
+		model="ir.ui.view">
 		<field name="name">stock.picking.form.exchange</field>
 		<field name="model">stock.picking</field>
 		<field name="inherit_id" ref="stock.view_picking_form" />
 		<field name="arch" type="xml">
+			<xpath expr="//div[@name='button_box']" position="inside">
+				<button name="action_view_exchange_delivery" type="object"
+					class="oe_stat_button" icon="fa-truck"
+					attrs="{'invisible': [('exchange_pickings_count', '=', 0)]}">
+					<field name="exchange_pickings_count" widget="statinfo"
+						string="Exchange Deliveries" />
+				</button>
+			</xpath>
 			<xpath expr="//field[@name='origin']" position="after">
+				<field name="org_picking_id"
+					attrs="{'invisible': [('org_picking_id', '=', False)]}"
+					options="{'always_reload': True,
+								  'no_create': True, 
+								  'no_create_edit': True, 
+								  'no_quick_create': True}" />
 				<field name="exchange_picking_ids" widget="exchange_picking"
+					attrs="{'invisible': [('exchange_picking_ids', '=', [])]}"
 					string="Exchange Order Pickings" />
 			</xpath>
 		</field>

@@ -46,8 +46,28 @@ class StockMove(models.Model):
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
+    @api.depends('org_picking_id', 'exchange_picking_ids')
+    def _get_exchange_data(self):
+        for picking in self:
+            picking.update({
+                'exchange_pickings_count': len(picking.exchange_picking_ids),
+            })
+
     org_picking_id = fields.Many2one(related="sale_id.org_picking_id", string="Origin Picking", store=True, readonly=False)
-    exchange_picking_ids = fields.One2many('stock.picking', 'org_picking_id', string='Exchange Order Pickings')
+    exchange_picking_ids = fields.One2many('stock.picking', 'org_picking_id', string='Exchange Order Pickings', readonly=False)
+    exchange_pickings_count = fields.Integer(string='Exchange Order Pickings Count', compute='_get_exchange_data', readonly=True)    
+
+    @api.multi
+    def action_view_exchange_delivery(self):
+        self.ensure_one()
+        action = self.env.ref('stock.action_picking_tree_all').read()[0]
+        pickings = self.mapped('exchange_picking_ids')
+        if len(pickings) > 1:
+            action['domain'] = [('id', 'in', pickings.ids)]
+        elif pickings:
+            action['views'] = [(self.env.ref('stock.view_picking_form').id, 'form')]
+            action['res_id'] = pickings.id
+        return action
     
     
     
