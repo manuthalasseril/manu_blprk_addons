@@ -13,6 +13,9 @@
 				<xpath expr="//field[@name='product_return_moves']/tree"
 					position="inside">
 					<field name="to_exchange" />
+					<field name="ex_quantity"
+						attrs="{'invisible': [('to_exchange', '=', False)],						
+							  	'required': [('to_exchange', '=', True)]}" />
 					<field name="ex_product_id"
 						attrs="{'invisible': [('to_exchange', '=', False)]}"
 						options="{'always_reload': True,

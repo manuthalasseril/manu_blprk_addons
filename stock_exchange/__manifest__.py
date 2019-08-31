@@ -10,9 +10,14 @@
         'data/ir_sequence_data.xml',
         #'security/exchange_security.xml',
         #'security/ir.model.access.csv',
+        'views/exchange_templates.xml',
+        'views/sale_view.xml',
         'views/exchange_view.xml',
         'wizard/stock_wiz.xml',
         
+    ],
+    'qweb': [
+        'static/src/xml/exchange_picking.xml',
     ],
     'installable': True,
     'images': [

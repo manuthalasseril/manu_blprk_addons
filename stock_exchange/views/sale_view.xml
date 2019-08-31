@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+	<record id="view_order_form_inherit_exchange" model="ir.ui.view">
+		<field name="name">sale.order.form.exchange</field>
+		<field name="model">sale.order</field>
+		<field name="inherit_id" ref="sale.view_order_form" />
+		<field name="arch" type="xml">
+			<xpath expr="//button[@name='action_view_invoice']"
+				position="before">
+				<button name="action_view_exchange" type="object"
+					class="oe_stat_button" icon="fa-shopping-cart"
+					attrs="{'invisible': [('exchange_count', '=', 0)]}">
+					<field name="exchange_count" widget="statinfo"
+						string="Exchanges" />
+				</button>
+				<button name="action_view_exchange_delivery" type="object"
+					class="oe_stat_button" icon="fa-truck"
+					attrs="{'invisible': [('exchange_deliv_count', '=', 0)]}">
+					<field name="exchange_deliv_count" widget="statinfo"
+						string="Exchange Deliveries" />
+				</button>
+				<button name="action_view_exchange_invoice" type="object"
+					class="oe_stat_button" icon="fa-pencil-square-o"
+					attrs="{'invisible': [('exchange_inv_count', '=', 0)]}">
+					<field name="exchange_inv_count" widget="statinfo"
+						string="Exchange Invoices" />
+				</button>
+			</xpath>
+		</field>
+	</record>
+
+	<record id="view_picking_form_inherit_exchange" model="ir.ui.view">
+		<field name="name">stock.picking.form.exchange</field>
+		<field name="model">stock.picking</field>
+		<field name="inherit_id" ref="stock.view_picking_form" />
+		<field name="arch" type="xml">
+			<xpath expr="//field[@name='origin']" position="after">
+				<field name="exchange_picking_ids" widget="exchange_picking"
+					string="Exchange Order Pickings" />
+			</xpath>
+		</field>
+	</record>
+
+</odoo>

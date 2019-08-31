@@ -1,3 +1,94 @@
 <?xml version="1.0"?>
 <odoo>
+
+	<record id="view_exchange_order_tree" model="ir.ui.view">
+		<field name="name">sale.order.tree.exchange</field>
+		<field name="model">sale.order</field>
+		<field name="priority">100</field>
+		<field name="arch" type="xml">
+			<tree string="Exchange Orders" create="0"
+				decoration-bf="message_needaction==True"
+				decoration-muted="state=='cancel'">
+				<field name="message_needaction" invisible="1" />
+				<field name="name" string="Exchange Number" />
+				<field name="confirmation_date" string="Confirmation Date" />
+				<field name="commitment_date"
+					groups="sale.group_sale_order_dates" />
+				<field name="expected_date"
+					groups="sale.group_sale_order_dates" />
+				<field name="partner_id" />
+				<field name="user_id" />
+				<field name="amount_total" sum="Total Tax Included"
+					widget="monetary" />
+				<field name="currency_id" invisible="1" />
+				<field name="invoice_status" invisible="1" />
+				<field name="state" invisible="1" />
+			</tree>
+		</field>
+	</record>
+
+	<record id="view_order_form_inherit_exchange_order"
+		model="ir.ui.view">
+		<field name="name">sale.order.form.inherit.exchange.order</field>
+		<field name="model">sale.order</field>
+		<field name="priority" eval="100" />
+		<field name="mode">primary</field>
+		<field name="inherit_id" ref="sale.view_order_form" />
+		<field name="arch" type="xml">
+			<xpath expr="//form" position="attributes">
+				<attribute name="create">0</attribute>
+			</xpath>
+			<xpath expr="//field[@name='payment_term_id']" position="after">
+				<field name="org_order_id"
+					options="{'always_reload': True,
+								  'no_create': True, 
+								  'no_create_edit': True, 
+								  'no_quick_create': True}" />
+			</xpath>
+		</field>
+	</record>
+
+	<record id="action_exchange_orders"
+		model="ir.actions.act_window">
+		<field name="name">Exchange Orders</field>
+		<field name="type">ir.actions.act_window</field>
+		<field name="res_model">sale.order</field>
+		<field name="view_type">form</field>
+		<field name="view_mode">tree,form</field>
+		<field name="search_view_id"
+			ref="sale.sale_order_view_search_inherit_sale" />
+		<field name="context">{
+			'show_exchange_order':True,
+			'show_exchange_order_only':True
+			}
+		</field>
+		<field name="domain">[]</field>
+		<field name="help" type="html">
+			<p class="o_view_nocontent_smiling_face">
+				Showing Exchange Order Details
+			</p>
+		</field>
+	</record>
+
+	<record id="exchange_order_action_view_order_tree"
+		model="ir.actions.act_window.view">
+		<field name="sequence" eval="1" />
+		<field name="view_mode">tree</field>
+		<field name="view_id" ref="view_exchange_order_tree" />
+		<field name="act_window_id" ref="action_exchange_orders" />
+	</record>
+
+	<record id="exchange_order_action_view_order_form"
+		model="ir.actions.act_window.view">
+		<field name="sequence" eval="3" />
+		<field name="view_mode">form</field>
+		<field name="view_id"
+			ref="view_order_form_inherit_exchange_order" />
+		<field name="act_window_id" ref="action_exchange_orders" />
+	</record>
+
+	<menuitem id="menu_exchange_order" name="Exchange Orders"
+		action="action_exchange_orders" parent="sale.sale_order_menu"
+		sequence="4" groups="sales_team.group_sale_salesman" />
+
 </odoo>

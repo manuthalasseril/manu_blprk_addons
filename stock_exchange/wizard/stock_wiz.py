@@ -16,6 +16,7 @@ class StockReturnPickingLine(models.TransientModel):
     _inherit = "stock.return.picking.line"
 
     to_exchange = fields.Boolean(string="To Exchange")
+    ex_quantity = fields.Float("Exchange Quantity", digits=dp.get_precision('Product Unit of Measure'))
     ex_product_id = fields.Many2one('product.product', 
                                         domain="[('id', '!=', product_id)]",
                                         string="Exchange Other Product")
@@ -30,7 +31,18 @@ class StockReturnPickingLine(models.TransientModel):
                                 related='move_id.qty_invoiced',                                
                                 readonly=True,
                                 digits=dp.get_precision('Product Unit of Measure'))
-
+            
+    @api.onchange('to_exchange')
+    def _onchange_to_exchange(self):
+        if self.to_exchange:
+            self.ex_quantity = self.quantity
+        else:
+            self.ex_quantity = 0
+            
+    '''@api.onchange('quantity')
+    def _onchange_quantity(self):
+        self.ex_quantity = self.quantity'''
+        
 
     @api.onchange('ex_product_id')
     def _onchange_ex_product_id(self):
@@ -68,12 +80,13 @@ class ReturnPicking(models.TransientModel):
 
     def _create_returns(self):
         #To Do : Check also if it is paid
-        lines_notpaid = self.product_return_moves.filtered(lambda rl: rl.to_exchange and rl.quantity > rl.qty_invoiced)
+        lines_notpaid = self.product_return_moves.filtered(lambda rl: rl.to_exchange and rl.ex_quantity > rl.qty_invoiced)
         if lines_notpaid:
             product_names = lines_notpaid.mapped('product_id').mapped('name')
-            #raise UserError(_("Only invoiced qty of product lines are allowed.\
-            #                  Please correct the following lines: \n %s") % ',\n'.join(product_names))        
-        lines_toexchange = self.product_return_moves.filtered(lambda rl: rl.to_exchange)
+            raise UserError(_("Only invoiced qty of product lines are allowed.\
+                              Please correct the following lines: \n %s") % ',\n'.join(product_names))
+        # Zero later for PO        
+        lines_toexchange = self.product_return_moves.filtered(lambda rl: rl.to_exchange and rl.ex_quantity != 0.0)
         if lines_toexchange:
             #OrderLine = self.env['sale.order.line']
             picking_id = self.picking_id
@@ -102,7 +115,7 @@ class ReturnPicking(models.TransientModel):
                     product_id = exchange_line.ex_product_id
                     uom_id = exchange_line.ex_uom_id
                     is_exh_prod = True
-                product_uom_qty = exchange_line.uom_id._compute_quantity(exchange_line.quantity, uom_id)
+                product_uom_qty = exchange_line.uom_id._compute_quantity(exchange_line.ex_quantity, uom_id)
                 exchange_sale_line = sale_line.copy({
                     'order_id': exchange_order.id,
                     'name': _("Exchange of %s") % sale_line.name,
@@ -128,10 +141,14 @@ class ReturnPicking(models.TransientModel):
                 exchange_sale_line.product_uom_change()
                 exchange_sale_line._onchange_discount()                
                 exchange_sale_line.write({
+                    'name': _("Exchange of %s") % sale_line.name,
                     #'product_uom_qty': product_uom_qty,
                     #'product_uom' : uom_id.id,
                 })
-                #To Do : Didnt Tested! Why its so complicated? Please simplify me! 
+                #To Do: Didnt Tested! Why its so complicated? Please simplify me! 
+                #To Do: Calculations are not accurate always (checked with positive workflows).
+                #       Later please correct me. Find all the test cases.
+                #       ^^(Results are not important :P (<< Req)
                 sale_price_unit = sale_line.price_unit
                 real_price_unit = exchange_sale_line.price_unit
                 

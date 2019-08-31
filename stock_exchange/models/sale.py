@@ -18,11 +18,29 @@ from werkzeug.urls import url_encode
 
 class StockExchange(models.Model):
     _inherit = "sale.order"
+
+    @api.depends('org_order_id')
+    def _get_exchange_orders(self):
+        for order in self:
+            ctx = dict(self._context)
+            ctx['show_exchange_order'] = ctx.get('show_exchange_order', True)     
+            exchange_orders = self.sudo().with_context(ctx).search([('org_order_id', '=', order.id)])   
+            exchange_count = len(exchange_orders)
+            exchange_deliv_count = sum(exchange_orders.mapped('delivery_count'))
+            exchange_inv_count = sum(exchange_orders.mapped('invoice_count'))
+            order.update({
+                'exchange_count': exchange_count,
+                'exchange_deliv_count': exchange_deliv_count,
+                'exchange_inv_count': exchange_inv_count,
+            })
     
     is_exchange = fields.Boolean(string="Is Exchange", readonly=True)
     org_order_id = fields.Many2one('sale.order', string='Origin Order', readonly=True)
     org_picking_id = fields.Many2one('stock.picking', string='Origin Picking', readonly=True)
-
+    exchange_count = fields.Integer(string='Exchange Count', compute='_get_exchange_orders', readonly=True)
+    exchange_deliv_count = fields.Integer(string='Exchange Delivery Count', compute='_get_exchange_orders', readonly=True)
+    exchange_inv_count = fields.Integer(string='Exchange Invoice Count', compute='_get_exchange_orders', readonly=True)
+    
     @api.model
     def create(self, vals):
         if vals.get('name', _('New')) == _('New') and vals.get('is_exchange', False):
@@ -47,6 +65,60 @@ class StockExchange(models.Model):
                 line.qty_to_invoice = line.product_uom_qty - line.qty_invoiced
             else:
                 line.qty_to_invoice = 0
+    
+    @api.model
+    def search(self, args, offset=0, limit=None, order=None, count=False):
+        context = self._context or {}
+        if not context.get('show_exchange_order',False):
+            args += [('is_exchange', '=', False)]
+        if context.get('show_exchange_order_only', False):
+            args += [('is_exchange', '=', True)]
+        return super(StockExchange, self).search(args, offset, limit, order, count=count)
+
+    @api.multi
+    def action_view_exchange(self):
+        ctx = dict(self._context)
+        ctx['show_exchange_order'] = ctx.get('show_exchange_order', True)  
+        exchange_orders = self.sudo().with_context(ctx).search([('org_order_id', '=', self.id)])
+        action = self.env.ref('stock_exchange.action_exchange_orders').read()[0]
+        if len(exchange_orders) > 1:
+            action['domain'] = [('id', 'in', exchange_orders.ids)]
+        elif len(exchange_orders) == 1:
+            action['views'] = [(self.env.ref('stock_exchange.view_order_form_inherit_exchange_order').id, 'form')]
+            action['res_id'] = exchange_orders.ids[0]
+        else:
+            action = {'type': 'ir.actions.act_window_close'}
+        return action
+
+    @api.multi
+    def action_view_exchange_delivery(self):
+        ctx = dict(self._context)
+        ctx['show_exchange_order'] = ctx.get('show_exchange_order', True)  
+        exchange_orders = self.sudo().with_context(ctx).search([('org_order_id', '=', self.id)])
+        action = self.env.ref('stock.action_picking_tree_all').read()[0]
+        pickings = exchange_orders.mapped('picking_ids')
+        if len(pickings) > 1:
+            action['domain'] = [('id', 'in', pickings.ids)]
+        elif pickings:
+            action['views'] = [(self.env.ref('stock.view_picking_form').id, 'form')]
+            action['res_id'] = pickings.id
+        return action
+
+    @api.multi
+    def action_view_exchange_invoice(self):
+        ctx = dict(self._context)
+        ctx['show_exchange_order'] = ctx.get('show_exchange_order', True)  
+        exchange_orders = self.sudo().with_context(ctx).search([('org_order_id', '=', self.id)])
+        invoices = exchange_orders.mapped('invoice_ids')
+        action = self.env.ref('account.action_invoice_tree1').read()[0]
+        if len(invoices) > 1:
+            action['domain'] = [('id', 'in', invoices.ids)]
+        elif len(invoices) == 1:
+            action['views'] = [(self.env.ref('account.invoice_form').id, 'form')]
+            action['res_id'] = invoices.ids[0]
+        else:
+            action = {'type': 'ir.actions.act_window_close'}
+        return action
                         
 
 class StockExchangeLine(models.Model):

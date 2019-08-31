@@ -41,4 +41,13 @@ class StockMove(models.Model):
         compute='_get_invoice_qty', string='Invoiced Quantity', store=True, readonly=True,
         digits=dp.get_precision('Product Unit of Measure'))
     to_exchange = fields.Boolean(string="To Exchange")
+
+
+class StockPicking(models.Model):
+    _inherit = 'stock.picking'
+
+    org_picking_id = fields.Many2one(related="sale_id.org_picking_id", string="Origin Picking", store=True, readonly=False)
+    exchange_picking_ids = fields.One2many('stock.picking', 'org_picking_id', string='Exchange Order Pickings')
+    
+    
     
