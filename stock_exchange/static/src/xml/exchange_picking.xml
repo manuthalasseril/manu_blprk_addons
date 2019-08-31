@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates id="template" xml:space="preserve">
+
 <!-- Copied from here https://p.w3layouts.com/demos/shipment_track/web/ // Didnt checked the licence -->
+
 <t t-name="exchange_picking_design_me-working">
     <div class="exchange_picking">
         <t t-foreach="exchange_pickings" t-as="exchange_picking">

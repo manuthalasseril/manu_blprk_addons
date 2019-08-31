@@ -146,7 +146,7 @@ class ReturnPicking(models.TransientModel):
                     #'product_uom' : uom_id.id,
                 })
                 #To Do: Didnt Tested! Why its so complicated? Please simplify me! 
-                #To Do: Calculations are not accurate always (checked with positive workflows).
+                #To Do: Calculations are not accurate always (checked with only positive workflows).
                 #       Later please correct me. Find all the test cases.
                 #       ^^(Results are not important :P (<< Req)
                 sale_price_unit = sale_line.price_unit
