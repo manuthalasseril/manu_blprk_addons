@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<data>
+	
+		<record id="view_rest_oauth_app_token_list" model="ir.ui.view">
+			<field name="name">rest.oauth.app.token.list</field>
+			<field name="model">rest.oauth.app.token</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="oauth_app_id" />
+					<field name="user_id" />
+					<field name="location_uri" />
+					<field name="access_token" />
+					<field name="expiry_access_token" />
+					<field name="refresh_token" />
+					<field name="expiry_refresh_token" />
+				</tree>
+			</field>
+		</record>
+
+		<record id="view_rest_oauth_app_token_filter"
+			model="ir.ui.view">
+			<field name="name">rest.oauth.app.token.filter</field>
+			<field name="model">rest.oauth.app.token</field>
+			<field name="arch" type="xml">
+				<search>
+					<field name="oauth_app_id" />
+					<field name="user_id" />
+					<field name="location_uri" />
+					<field name="access_token" />
+					<field name="refresh_token" />
+				</search>
+			</field>
+		</record>
+
+		<record id="action_rest_auth_app_token"
+			model="ir.actions.act_window">
+			<field name="name">Oauth Application Tokens</field>
+			<field name="res_model">rest.oauth.app.token</field>
+			<field name="view_mode">tree</field>
+			<field name="search_view_id"
+				ref="view_rest_oauth_app_token_filter" />
+			<field name="view_id" ref="view_rest_oauth_app_token_list" />
+			<field name="context">{}</field>
+			<field name="domain">[]</field>
+			<field name="help" type="html">
+				<p class="o_view_nocontent_smiling_face">
+					Showing Oauth Application Tokens
+				</p>
+			</field>
+		</record>
+
+	</data>
+</odoo>

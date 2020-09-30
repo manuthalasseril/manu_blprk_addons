@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<data>
+
+		<menuitem id="menu_rest_api" name="Rest API"
+			parent="base.menu_administration" sequence="1000" />
+
+		<menuitem id="menu_rest_oauth_app" name="Oauth Application"
+			parent="menu_rest_api" sequence="10" action="action_rest_auth_app" />
+
+		<!-- <menuitem id="menu_rest_oauth_app_token" nam_tokene="Oauth Application Tokens"
+			parent="menu_rest_api" sequence="20" action="action_rest_auth_app_token" /> -->
+			
+	</data>
+</odoo>

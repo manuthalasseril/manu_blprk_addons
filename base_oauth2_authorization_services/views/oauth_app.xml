@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<data>
+		<record id="view_rest_oauth_app_list"
+			model="ir.ui.view">
+			<field name="name">rest.oauth.app.list</field>
+			<field name="model">rest.oauth.app</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="name" />
+				</tree>
+			</field>
+		</record>
+
+		<record id="view_rest_oauth_app_form"
+			model="ir.ui.view">
+			<field name="name">rest.oauth.app.form</field>
+			<field name="model">rest.oauth.app</field>
+			<field name="arch" type="xml">
+				<form>
+					<header>
+						<button name="action_run" type="object" states="draft"
+							string="Run" />
+						<button name="action_draft" type="object" states="cancel"
+							string="Reset to Draft" />
+						<button name="action_cancel" type="object"
+							states="draft,run" string="Cancel" />
+						<field name="state" widget="statusbar"
+							statusbar_visible="draft,run" />
+					</header>
+					<sheet>
+						<div class="oe_button_box" name="button_box">
+							<!-- <button name="preview_sale_order" type="object" class="oe_stat_button" 
+								icon="fa-globe icon"> <div class="o_field_widget o_stat_info"> <span class="o_stat_text">Customer</span> 
+								<span class="o_stat_text">Preview</span> </div> </button> -->
+						</div>
+						<div class="oe_title">
+							<h1>
+								<field name="name" placeholder="Name...." />
+							</h1>
+						</div>
+						<group>
+							<group>
+								<label for="client_id" string="Client Id" />
+								<div class="o_row">
+									<field name="client_id" readonly="1"
+										options="{'no_open': True}" />
+									<button name="action_generate_client_id" type="object"
+										icon="fa-bolt" class="btn btn-primary btn-sm oe_edit_only" />
+								</div>
+								<label for="client_secret" string="Client Secret" />
+								<div class="o_row">
+									<field name="client_secret" readonly="1"
+										options="{'no_open': True}" />
+									<button name="action_generate_client_secret"
+										type="object" icon="fa-bolt"
+										class="btn btn-primary btn-sm oe_edit_only" />
+								</div>
+							</group>
+							<group>
+								<field name="expiry_auth_code" />
+								<field name="expiry_access_token" />
+								<field name="expiry_refresh_token" />
+							</group>
+						</group>
+						<notebook>
+							<page name="other_infos" string="Other Informations">
+								<group>
+									<group name="auth" string="Access">
+										<field name="type_client" />
+										<field name="type_auth_grant" />
+										<field name="scope" />
+									</group>
+									<group name="redirect" string="Redirect Uris">
+										<field name="auth_redirect_uri" />
+									</group>
+								</group>
+							</page>
+						</notebook>
+					</sheet>
+					<div class="oe_chatter">
+						<field name="message_follower_ids" widget="mail_followers" />
+						<field name="message_ids" widget="mail_thread" />
+					</div>
+				</form>
+			</field>
+		</record>
+
+		<record id="view_rest_oauth_app_filter"
+			model="ir.ui.view">
+			<field name="name">rest.oauth.app.filter</field>
+			<field name="model">rest.oauth.app</field>
+			<field name="arch" type="xml">
+				<search>
+					<field name="name" />
+					<field name="description" />
+				</search>
+			</field>
+		</record>
+
+		<record id="action_rest_auth_app" model="ir.actions.act_window">
+			<field name="name">Oauth Applications</field>
+			<field name="res_model">rest.oauth.app</field>
+			<field name="view_mode">tree,form</field>
+			<field name="search_view_id"
+				ref="view_rest_oauth_app_filter" />
+			<field name="view_id" ref="view_rest_oauth_app_list" />
+			<field name="context">{}</field>
+			<field name="domain">[]</field>
+			<field name="help" type="html">
+				<p class="o_view_nocontent_smiling_face">
+					Showing Oauth Application
+				</p>
+			</field>
+		</record>
+
+	</data>
+</odoo>
