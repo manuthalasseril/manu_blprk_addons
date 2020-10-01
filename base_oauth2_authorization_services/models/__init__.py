@@ -3,3 +3,4 @@
 
 from . import oauth_app
 from . import oauth_app_token
+from . import oauth_app_auth_code

@@ -14,13 +14,13 @@ class RestOuthApplicationToken(models.Model):
     _name = 'rest.oauth.app.token'
     _rec_name = 'oauth_app_id'    
     
-    oauth_app_id = fields.Many2one('rest.oauth.app', ondelete='cascade', string="Rest Oauth Application", required=True, readonly=True, copy=False)
+    oauth_app_id = fields.Many2one('rest.oauth.app', required=True, ondelete='cascade', string="Rest Oauth Application", readonly=True, copy=False)
     user_id = fields.Many2one('res.users', required=True,  readonly=True, copy=False)
-    location_uri = fields.Char(required=True, readonly=True, copy=False)
+    location_uri = fields.Char(readonly=True, copy=False)
     access_token = fields.Many2one('rest.oauth.token', readonly=True, copy=False)
     expiry_access_token = fields.Datetime(related='access_token.expire', compute_sudo=True, readonly=True, copy=False)
     refresh_token = fields.Many2one('rest.oauth.token', readonly=True, copy=False)
-    expiry_refresh_token = fields.Datetime(related='access_token.expire', compute_sudo=True, readonly=True, copy=False)    
+    expiry_refresh_token = fields.Datetime(related='refresh_token.expire', compute_sudo=True, readonly=True, copy=False)    
     
     _sql_constraints = [
         ('access_token_uniq', 'unique (access_token)', 'The access_token must be unique!'),
@@ -39,4 +39,16 @@ class RestOuthApplicationToken(models.Model):
         expire = self.oauth_app_id.expiry_refresh_token
         self.env['rest.oauth.token'].action_generate_field_token(res_models=self, res_field=res_field, expire=expire)   
         
+    @api.model
+    def get_token_vals(self, oauth_app_token_id):
+        oauth_app_token = self.browse(oauth_app_token_id)
+        res = {
+                'access_token': oauth_app_token.access_token.token,
+                #'token_type': oauth_app_token.access_token.type,
+                'token_type': "Bearer",
+                'expires_in': oauth_app_token.oauth_app_id.expiry_access_token,
+                'refresh_token': oauth_app_token.refresh_token.token,
+            }
+        return res
+    
         

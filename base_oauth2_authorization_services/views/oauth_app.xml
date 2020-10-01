@@ -71,7 +71,8 @@
 										<field name="type_auth_grant" />
 										<field name="scope" />
 									</group>
-									<group name="redirect" string="Redirect Uris">
+									<group name="redirect" string="Redirect Uris">									
+										<field name="odoo_oauth2client_uri" />
 										<field name="auth_redirect_uri" />
 									</group>
 								</group>

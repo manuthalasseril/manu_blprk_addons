@@ -2,6 +2,7 @@
 # Copyright 2020 Manu Varghese [manuthalasseril@gmail.com]
 
 import logging
+from base64 import b64encode, b64decode
 from oauthlib import common as oauthlib_common
 from datetime import datetime, timedelta
 from odoo import api, fields, models, SUPERUSER_ID, _
@@ -28,13 +29,16 @@ class RestOuthToken(models.Model):
             token.res_name = (token.res_model and token.res_id and token.res_field) and \
                 '_'.join([str(token.res_id), self.env[token.res_model].browse(token.res_id).display_name, token.res_field])
     
+    type = fields.Selection(selection=[
+                                ('bearer', "Bearer"),
+                            ], required=True, default='bearer')    
     token = fields.Char(required=True, readonly=True, copy=False, default=_get_unique_token)
     expire = fields.Datetime(readonly=True, copy=False)    
     res_model_id = fields.Many2one('ir.model', 'Related Model', required=True, readonly=True, copy=False, ondelete='cascade')
-    res_model = fields.Char('Related Model Name', related='res_model_id.model', compute_sudo=True, store=True, required=True, readonly=True, copy=False)
+    res_model = fields.Char('Related Model Name', related='res_model_id.model', compute_sudo=True, store=True, readonly=True, copy=False)
     res_id = fields.Many2oneReference(string='Related ID', required=True, readonly=True, copy=False, model_field='res_model')
-    res_name = fields.Char('Related Name', compute='_compute_res_name', compute_sudo=True, store=True, required=True, readonly=True, copy=False)
-    res_field = fields.Char('Related Field', required=True)
+    res_name = fields.Char('Related Name', compute='_compute_res_name', compute_sudo=True, store=True, readonly=True, copy=False)
+    res_field = fields.Char('Related Field', required=True, readonly=True, copy=False)
     
     _sql_constraints = [
         ('token_res_uniq', 'unique (token,res_model_id,res_field)', 'The token must be unique per model and field!')
@@ -58,9 +62,9 @@ class RestOuthToken(models.Model):
             vals = self.get_res_vals(res_model=res_model, res_field=res_field)
             if expire:
                 expire = datetime.now() + timedelta(seconds=expire)
-                vals.update({'expire': expire})                 
-            res_field = self.create(vals)
-            res_model.write({res_field: res_field})
+                vals.update({'expire': expire})  
+            record = self.create(vals)
+            res_model.write({res_field: record.id})
     
 class RestOuthApplicationOld(models.Model):
     _name = 'rest.oauth.application'
@@ -90,6 +94,7 @@ class RestOuthApplication(models.Model):
     expiry_access_token = fields.Integer(default=14400)   
     expiry_refresh_token = fields.Integer(default=14400)
     scope = fields.Char()
+    odoo_oauth2client_uri = fields.Char()
     auth_redirect_uri = fields.Text(required=True)
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -116,6 +121,29 @@ class RestOuthApplication(models.Model):
             app.client_id.unlink()  
             app.client_secret.unlink() 
         return super(RestOuthApplication, self).unlink()
+    
+    @api.model
+    def generate_basic_auth_header(self, client_id, client_secret):        
+        client_pass = "{0}:{1}".format(client_id, client_secret)
+        auth_string = b64encode(client_pass.encode("utf-8"))
+        auth_headers = {
+                "Authorization": "Basic " + auth_string.decode("utf-8"),
+            }
+        return auth_headers
+    
+    @api.model
+    def get_basic_decode_auth_header(self, client_pass): 
+        client_id, client_secret = '', ''
+        try:
+            client_pass.split(' ')[1] 
+            client_pass = b64decode(client_pass.encode("utf-8"))
+            client_pass = client_pass.decode("utf-8")
+            client_pass = client_pass.split(':')
+            client_id = client_pass[0]    
+            client_secret = client_pass[1]             
+        except Exception as e:
+            client_id, client_secret = '', ''
+        return client_id, client_secret
         
     def action_draft(self):
         return self.write({'state': 'draft'})

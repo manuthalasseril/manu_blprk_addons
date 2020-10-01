@@ -11,7 +11,7 @@
     'description': """
                 Oauth2 Authorization Services
     """,
-    'depends': ['mail', 'base_rest'],
+    'depends': ['mail', 'auth_oauth', 'base_rest'],
     'data': [
         'security/ir.model.access.csv',
         'views/oauth_app.xml',
