@@ -67,10 +67,6 @@ class RestOuthToken(models.Model):
             record = self.create(vals)
             res_model.write({res_field: record.id})
     
-class RestOuthApplicationOld(models.Model):
-    _name = 'rest.oauth.application'
-    _inherit = ['mail.thread']
-
 class RestOuthApplication(models.Model):
     _name = 'rest.oauth.app'
     _inherit = ['mail.thread']

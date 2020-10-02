@@ -66,13 +66,25 @@ class RestOuthApplicationToken(models.Model):
     @api.model
     def get_token_vals(self, oauth_app_token_id):
         oauth_app_token = self.browse(oauth_app_token_id)
-        res = {
-                'access_token': oauth_app_token.access_token.token,
-                #'token_type': oauth_app_token.access_token.type,
-                'token_type': "Bearer",
-                'expires_in': oauth_app_token.oauth_app_id.expiry_access_token,
-                'refresh_token': oauth_app_token.refresh_token.token,
-            }
+        res = {}
+        if oauth_app_token.state == 'valid':
+            res.update({
+                    'access_token': oauth_app_token.access_token.token,
+                    #'token_type': oauth_app_token.access_token.type,
+                    'token_type': "Bearer",
+                    'expires_in': oauth_app_token.oauth_app_id.expiry_access_token,
+                    'refresh_token': oauth_app_token.refresh_token.token,
+                })
+        return res  
+    
+    @api.model
+    def get_user_vals(self, access_token):
+        oauth_app_token = self.check_access_token(access_token)
+        res = {}
+        if oauth_app_token.state == 'valid':
+            res.update({
+                'user_id': oauth_app_token.user_id.id,
+                })
         return res
     
     def action_invalid(self): 

@@ -121,6 +121,7 @@ class CredTokenService(Component):
                 err = err[0]
             err = odoo.tools.exception_to_unicode(err)
             _logger.exception(err)
+            #To Do: Username and password is printing in log. Restrict that
             raise e
 
     def _validator_create(self):

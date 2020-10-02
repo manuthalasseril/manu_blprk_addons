@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<odoo>
+	<record id="view_oauth_provider_form_inherit_redirect_uri"
+		model="ir.ui.view">
+		<field name="name">auth.oauth.provider.form.inherit.redirect.uri
+		</field>
+		<field name="model">auth.oauth.provider</field>
+		<field name="inherit_id"
+			ref="auth_oauth.view_oauth_provider_form" />
+		<field name="arch" type="xml">
+			<xpath expr="//field[@name='data_endpoint']" position="after">
+				<field name="response_type" />
+				<field name="redirect_uri" />
+				<field name="odoo_oauth2client_uri" />				
+			</xpath>
+		</field>
+	</record>
+
+</odoo>

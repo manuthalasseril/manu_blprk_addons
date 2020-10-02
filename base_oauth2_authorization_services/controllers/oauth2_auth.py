@@ -38,6 +38,8 @@ http_status_codes = {
 rest_auth_code_endpoint = '/'.join(['',_REST_NAME, 'auth', 'code']) 
 rest_auth_odoo_endpoint = '/'.join(['',_REST_NAME, 'auth', 'odoo']) 
 rest_auth_token_endpoint = '/'.join(['',_REST_NAME, 'auth', 'token'])
+rest_auth_validate_endpoint = '/'.join(['',_REST_NAME, 'oauth2', 'validate']) 
+rest_auth_data_endpoint = '/'.join(['',_REST_NAME, 'oauth2', 'data'])
 #odoo_oauth2client_endpoint = '/auth_oauth/signin'
    
 class RestAuth(http.Controller):
@@ -88,16 +90,17 @@ class RestAuth(http.Controller):
                     'location_uri': redirect_uri,
                 }
             oauth_app_token = OuthAppToken.create(vals)
-            res = {}
+            res = {
+                    'odoo_oauth2client_uri': odoo_oauth2client_uri,
+                    'scope': scope,
+                    'state': state,
+                    'redirect_uri': redirect_uri,
+                }
             if response_type == 'code' and oauth_app.type_auth_grant == 'auth_code':
                 auth_code_vals = OuthAppAuthCode.generate_auth_vals(oauth_app_token.id)
                 auth_code = auth_code_vals.get('auth_code')
                 res.update({
                         'code': auth_code,
-                        'scope': scope,
-                        'state': state,
-                        'redirect_uri': redirect_uri,
-                        'odoo_oauth2client_uri': odoo_oauth2client_uri,
                     })
             elif response_type == 'token' and oauth_app.type_auth_grant == 'implicit':
                 oauth_app_token.action_generate_access_token()
@@ -253,7 +256,58 @@ class RestAuth(http.Controller):
             error_msg = tools.exception_to_unicode(e)
             _logger.exception(error_msg)
             return self.generate_response(http_status_codes['internal_server_error'], error_msg)
+    
+    @http.route(rest_auth_validate_endpoint, type='http', auth='none', csrf=False)
+    def rest_request_validate_token(self, **kwargs):
+        _logger.info(_("Requested Validate Token Service...")) 
+        try:
+            access_token = kwargs.get('access_token', None)
+            if None in [access_token]:
+                error_msg = _('The following parameters are must: access_token')
+                _logger.error(error_msg)  
+                return self.generate_response(http_status_codes['not_acceptable'], error_msg)
+            OuthAppToken = request.env['rest.oauth.app.token']
+            oauth_app_token = OuthAppToken.check_access_token(access_token) 
+            if not oauth_app_token:
+                error_msg = _('The access_token is either expired or not found')
+                _logger.error(error_msg)  
+                return self.generate_response(http_status_codes['unauthorized'], error_msg)
+            valid_vals = {'valid': True}
+            return self.generate_response(http_status_codes['ok'], valid_vals)
+        except Exception as e:
+            if getattr(e, 'args', ()):
+                e = [ustr(a) for a in e.args]
+                e = e[0]
+            error_msg = tools.exception_to_unicode(e)
+            _logger.exception(error_msg)
+            return self.generate_response(http_status_codes['internal_server_error'], error_msg)
         
+    @http.route(rest_auth_data_endpoint, type='http', auth='none', csrf=False)
+    def rest_request_data_token(self, **kwargs):
+        _logger.info(_("Requested User Data Token Service...")) 
+        try:
+            access_token = kwargs.get('access_token', None)
+            if None in [access_token]:
+                error_msg = _('The following parameters are must: access_token')
+                _logger.error(error_msg)  
+                return self.generate_response(http_status_codes['not_acceptable'], error_msg)
+            OuthAppToken = request.env['rest.oauth.app.token']
+            oauth_app_token = OuthAppToken.check_access_token(access_token) 
+            if not oauth_app_token:
+                error_msg = _('The access_token is either expired or not found')
+                _logger.error(error_msg)  
+                return self.generate_response(http_status_codes['unauthorized'], error_msg)
+            user_vals = oauth_app_token.get_user_vals(access_token)
+            oauth_app_token.action_invalid() 
+            return self.generate_response(http_status_codes['ok'], user_vals)
+        except Exception as e:
+            if getattr(e, 'args', ()):
+                e = [ustr(a) for a in e.args]
+                e = e[0]
+            error_msg = tools.exception_to_unicode(e)
+            _logger.exception(error_msg)
+            return self.generate_response(http_status_codes['internal_server_error'], error_msg)
+    
     def generate_response(self, status_code, data={}, headers=[]):
         _logger.info(_("Generating response with status code %s!") %(str(status_code)))       
         try:
