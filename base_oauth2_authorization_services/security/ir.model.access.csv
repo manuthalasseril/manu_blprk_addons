@@ -6,5 +6,8 @@ access_rest_oauth_token_system,access.rest.oauth.token.system,model_rest_oauth_t
 access_rest_oauth_app_public,access.rest.oauth.app.public,model_rest_oauth_app,,1,0,0,0
 access_rest_oauth_app_system,access.rest.oauth.app.system,model_rest_oauth_app,base.group_system,1,1,1,1
 
-access_rest_oauth_app_token_public,access.rest.oauth.app.token.public,model_rest_oauth_app_token,,1,0,1,0
+access_rest_oauth_app_auth_code_public,access.rest.oauth.app.auth.code.public,model_rest_oauth_app_auth_code,,1,1,1,0
+access_rest_oauth_app_auth_code_system,access.rest.oauth.app.auth.code.system,model_rest_oauth_app_auth_code,base.group_system,1,0,1,0
+
+access_rest_oauth_app_token_public,access.rest.oauth.app.token.public,model_rest_oauth_app_token,,1,1,1,0
 access_rest_oauth_app_token_system,access.rest.oauth.app.token.system,model_rest_oauth_app_token,base.group_system,1,0,1,0

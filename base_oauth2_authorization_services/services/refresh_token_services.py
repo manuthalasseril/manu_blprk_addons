@@ -25,13 +25,13 @@ from ..controllers.main import _REST_NAME
 _logger = logging.getLogger(__name__)
 
 
-class CredTokenService(Component):
+class RefreshTokenService(Component):
     _inherit = 'base.rest.service'
-    _name = 'cred.token.service'
+    _name = 'refresh.token.service'
     _usage = 'token'
-    _collection = '.'.join([_REST_NAME, 'cred', 'token', 'services'])
+    _collection = '.'.join([_REST_NAME, 'refresh', 'token', 'services'])
     _description = """
-        Resource Owner Credentials authorize Service to generate token for an application.
+        Refresh Grant Type authorize Service to generate token for an application.
     """
 
     #@skip_secure_params
@@ -46,8 +46,8 @@ class CredTokenService(Component):
                 info = _("Empty value for grant_type!")
                 _logger.error(info)
                 raise ValidationError(info)
-            if grant_type != 'password':
-                info = _("Wrong value for grant_type. Value must be password!")
+            if grant_type != 'refresh_token':
+                info = _("Wrong value for grant_type. Value must be refresh_token!")
                 _logger.error(info)
                 raise ValidationError(info)
             if not scope:
@@ -55,14 +55,13 @@ class CredTokenService(Component):
                 _logger.error(info)
                 raise ValidationError(info)
             db_name = params.get('db_name', None)
-            username = params['username'] if params.get('username') else None
-            password = params['password'] if params.get('password') else None                
+            refresh_token = params['refresh_token'] if params.get('refresh_token') else None
+            if not refresh_token:
+                info = _("Empty value for refresh_token!")
+                _logger.error(info)
+                raise http.SessionExpiredException(info)            
             if not db_name:      
                 db_name = request.httprequest.headers.get('db_name', tools.config.get('db_name', False))
-            if not username or not password:
-                info = _("Empty value for 'username' or 'password'!")
-                _logger.error(info)
-                raise http.SessionExpiredException(info)
             if not db_name:
                 info = _("Empty value for 'db_name'!")
                 _logger.error(info)
@@ -84,37 +83,29 @@ class CredTokenService(Component):
             if not oauth_app:
                 error_msg = _('The client_id/client_secret are not belongs to the registered app!')
                 _logger.error(error_msg)
-                raise ValidationError(error_msg)            
-            try:
-                request.session.authenticate(db_name, username, password)
-            except Exception as e:
-                err = odoo.tools.exception_to_unicode(e)
-                _logger.exception(err)
-                raise http.SessionExpiredException(_("Wrong login/password (%s") % (err))
-            uid = request.session.uid          
-            if uid:                
-                OuthAppToken = request.env['rest.oauth.app.token']
-                user = self.env['res.users'].sudo().browse(uid)                           
-                vals = {
+                raise ValidationError(error_msg)
+            OuthAppToken = self.env['rest.oauth.app.token']                          
+            oauth_app_token = OuthAppToken.check_refresh_token(refresh_token)
+            if not oauth_app_token:
+                info = _("The refresh_token is either expired or not found!")
+                _logger.error(info)
+                raise http.SessionExpiredException(info)
+            user = oauth_app_token.user_id
+            vals = {
                     'oauth_app_id': oauth_app.id,
                     'user_id': user.id,
                 }
-                oauth_app_token = OuthAppToken.create(vals)
-                oauth_app_token.action_generate_access_token()
-                oauth_app_token.action_generate_refresh_token()
-                token_vals = oauth_app_token.get_token_vals(oauth_app_token.id)
-                token_vals.update({
-                            'user_context': request.session.get_context(),
-                            'company_id': self.env.user.company_id.id if uid else 'null',
-                        })
-                return {            
+            oauth_app_token.action_invalid() 
+            oauth_app_token = OuthAppToken.create(vals)
+            oauth_app_token.action_generate_access_token()
+            oauth_app_token.action_generate_refresh_token()
+            token_vals = oauth_app_token.get_token_vals(oauth_app_token.id)           
+            return {            
                         'name': _("OK"),
                         'code': 200,
-                        'description': _("Login was successfully"),
+                        'description': _("Access token created successfully"),
                         'data': token_vals,
                     }
-            else:
-                raise http.SessionExpiredException(_("Wrong login/password"))
         except Exception as e:
             if getattr(e, 'args', ()):
                 err = [ustr(a) for a in e.args]
@@ -126,8 +117,7 @@ class CredTokenService(Component):
     def _validator_create(self):
         return {
                 'db_name': {'type': 'string'},
-                'username': {'type': 'string', 'required': True}, 
-                'password': {'type': 'string', 'required': True},
+                'refresh_token': {'type': 'string', 'required': True}, 
                 'grant_type': {'type': 'string', 'required': True},
                 'scope': {'type': 'string', 'required': True},                
             }
@@ -147,25 +137,7 @@ class CredTokenService(Component):
                                     'type': 'integer',
                                     'coerce': to_int,
                                     'required': True
-                                    },
-                        'company_id': {                                    
-                                    'type': 'integer',
-                                    'coerce': to_int,
-                                    'required': True
                                 },
-                        'user_context': {
-                                'type': 'dict',
-                                'required': True,                
-                                'schema': {
-                                    'uid': {                                    
-                                        'type': 'integer',
-                                        'coerce': to_int,
-                                        'required': True,   
-                                    },
-                                    'lang': {'type': 'string', 'required': True,},
-                                    'tz': {'type': 'string', 'required': True,},
-                                },                            
-                            },
                         },
                     }
                 }

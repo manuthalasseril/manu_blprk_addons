@@ -12,4 +12,8 @@ class RestCredTokenController(RestController):
     _root_path = '/'.join(['',_REST_NAME, 'cred/'])
     _collection_name = '.'.join([_REST_NAME, 'cred', 'token', 'services'])
     _default_auth = 'public'
-    _cors = '*'
+
+class RestRefreshTokenController(RestController):
+    _root_path = '/'.join(['',_REST_NAME, 'refresh/'])
+    _collection_name = '.'.join([_REST_NAME, 'refresh', 'token', 'services'])
+    _default_auth = 'public'

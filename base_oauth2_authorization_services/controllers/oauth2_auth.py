@@ -38,7 +38,6 @@ http_status_codes = {
 rest_auth_code_endpoint = '/'.join(['',_REST_NAME, 'auth', 'code']) 
 rest_auth_odoo_endpoint = '/'.join(['',_REST_NAME, 'auth', 'odoo']) 
 rest_auth_token_endpoint = '/'.join(['',_REST_NAME, 'auth', 'token'])
-rest_cred_token_endpoint = '/'.join(['',_REST_NAME, 'cred', 'token'])
 #odoo_oauth2client_endpoint = '/auth_oauth/signin'
    
 class RestAuth(http.Controller):
@@ -68,7 +67,7 @@ class RestAuth(http.Controller):
                 _logger.error(error_msg)  
                 return self.generate_response(http_status_codes['not_acceptable'], error_msg)
             redirect_uri = unquote(redirect_uri)
-            OuthApplication = request.env['rest.oauth.app'].sudo()
+            OuthApplication = request.env['rest.oauth.app']
             oauth_app = OuthApplication.search([('client_id', '=', client_id)])
             if not oauth_app:
                 error_msg = _('The "client_id" is wrong')
@@ -81,8 +80,8 @@ class RestAuth(http.Controller):
                 error_msg = _('The value of "redirect_uri" is wrong')
                 _logger.error(error_msg)  
                 return self.generate_response(http_status_codes['unauthorized'], error_msg)
-            OuthAppToken = request.env['rest.oauth.app.token'].sudo()
-            OuthAppAuthCode = request.env['rest.oauth.app.auth.code'].sudo()
+            OuthAppToken = request.env['rest.oauth.app.token']
+            OuthAppAuthCode = request.env['rest.oauth.app.auth.code']
             vals = {
                     'oauth_app_id': oauth_app.id,
                     'user_id': user.id,
@@ -142,7 +141,7 @@ class RestAuth(http.Controller):
                 return self.generate_response(http_status_codes['not_acceptable'], error_msg)
             redirect_uri = unquote(redirect_uri)
             odoo_oauth2client_uri = unquote(odoo_oauth2client_uri)
-            OuthAppAuthCode = request.env['rest.oauth.app.auth.code'].sudo()
+            OuthAppAuthCode = request.env['rest.oauth.app.auth.code']
             oauth_app = OuthAppAuthCode.get_oauthapp_auth_code(code) 
             if not oauth_app:
                 error_msg = _('The auth code is either expired or not found')
@@ -220,7 +219,7 @@ class RestAuth(http.Controller):
                 _logger.error(error_msg)  
                 return self.generate_response(http_status_codes['not_acceptable'], error_msg)
             redirect_uri = unquote(redirect_uri)
-            OuthAppAuthCode = request.env['rest.oauth.app.auth.code'].sudo()
+            OuthAppAuthCode = request.env['rest.oauth.app.auth.code']
             oauth_app = OuthAppAuthCode.get_oauthapp_auth_code(code) 
             if not oauth_app:
                 error_msg = _('The auth code is either expired or not found')
@@ -245,6 +244,7 @@ class RestAuth(http.Controller):
             oauth_app_token.action_generate_access_token()
             oauth_app_token.action_generate_refresh_token()
             token_vals = oauth_app_token.get_token_vals(oauth_app_token.id)
+            OuthAppAuthCode.check_auth_code(code).action_invalid()   
             return self.generate_response(http_status_codes['created'], token_vals)
         except Exception as e:
             if getattr(e, 'args', ()):
@@ -254,56 +254,6 @@ class RestAuth(http.Controller):
             _logger.exception(error_msg)
             return self.generate_response(http_status_codes['internal_server_error'], error_msg)
         
-    @http.route(rest_cred_token_endpoint, type='http', auth='none', csrf=False)
-    def rest_request_cred_token(self, **kwargs):
-        _logger.info(_("Requested Credential Token Service...")) 
-        try:
-            grant_type = kwargs.get('grant_type', None)
-            scope = kwargs.get('scope', None) #Need to handle everywhere
-            if grant_type == 'password':
-                username = kwargs.get('username', None)
-                password = kwargs.get('password', None)
-                if None in [username, password]:
-                    error_msg = _('The following parameters are must: username, password')
-                    _logger.error(error_msg)  
-                    return self.generate_response(http_status_codes['not_acceptable'], error_msg)
-                authorization_header = request.httprequest.headers.get('Authorization')
-                if not authorization_header:
-                    authorization_header = request.httprequest.headers.get('HTTP_AUTHORIZATION')
-                if not authorization_header:
-                    error_msg = _('The "Authorization" header is missing')
-                    _logger.error(error_msg)  
-                    return self.generate_response(http_status_codes['not_acceptable'], error_msg)
-                OuthApplication = request.env['rest.oauth.app'].sudo()
-                client_id, client_secret = OuthApplication.get_basic_decode_auth_header(authorization_header) 
-                if not client_id or not client_secret:
-                    error_msg = _('The "client_id" or "client_secret" is wrong')
-                    _logger.error(error_msg)
-                oauth_app = OuthApplication.search([('client_id', '=', client_id), ('client_secret', '=', client_secret)])
-                if not oauth_app:
-                    error_msg = _('The "client_id" or "client_secret" are not belongs to the registered app!')
-                    _logger.error(error_msg)
-                OuthAppToken = request.env['rest.oauth.app.token'].sudo()            
-                vals = {
-                    'oauth_app_id': oauth_app.id,
-                    'user_id': user.id,
-                }
-                oauth_app_token = OuthAppToken.create(vals)
-                oauth_app_token.action_generate_access_token()
-                oauth_app_token.action_generate_refresh_token()
-                token_vals = oauth_app_token.get_token_vals(oauth_app_token.id)
-                return self.generate_response(http_status_codes['created'], token_vals)
-        except Exception as e:
-            if getattr(e, 'args', ()):
-                e = [ustr(a) for a in e.args]
-                e = e[0]
-            error_msg = tools.exception_to_unicode(e)
-            _logger.exception(error_msg)
-            return self.generate_response(http_status_codes['internal_server_error'], error_msg)
-        
-    
-    
-    
     def generate_response(self, status_code, data={}, headers=[]):
         _logger.info(_("Generating response with status code %s!") %(str(status_code)))       
         try:

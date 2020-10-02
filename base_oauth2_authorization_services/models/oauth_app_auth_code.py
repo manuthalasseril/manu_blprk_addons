@@ -18,17 +18,14 @@ class RestOuthApplicationAuthCode(models.Model):
     oauth_app_token_id = fields.Many2one('rest.oauth.app.token', ondelete='cascade', string="Rest Oauth Application Token", required=True, readonly=True, copy=False)
     auth_code = fields.Many2one('rest.oauth.token', readonly=True, copy=False)
     expiry_auth_code = fields.Datetime(related='auth_code.expire', compute_sudo=True, readonly=True, copy=False)
+    state = fields.Selection([
+        ('valid', 'Valid'),
+        ('invalid', 'Invalid'),
+        ], string='Status', readonly=True, copy=False, default='valid')
     
     _sql_constraints = [
         ('auth_code_uniq', 'unique (auth_code)', 'The auth_code must be unique!'),
     ]  
-    
-    def action_generate_auth_code(self): 
-        self.ensure_one()       
-        res_field = 'auth_code'
-        oauth_app_id = self.oauth_app_token_id.oauth_app_id
-        expire = oauth_app_id.expiry_auth_code
-        self.env['rest.oauth.token'].action_generate_field_token(res_models=self, res_field=res_field, expire=expire)
         
     @api.model
     def generate_auth_vals(self, oauth_app_token_id):
@@ -47,6 +44,7 @@ class RestOuthApplicationAuthCode(models.Model):
     def check_auth_code(self, auth_code):
         today = fields.Datetime.now()
         oauth_app_auth_code = self.search([
+                            ('state', '=', 'valid'),
                             ('auth_code.token', '=', auth_code),
                             ('auth_code.expire', '>', today),
                         ])
@@ -68,4 +66,15 @@ class RestOuthApplicationAuthCode(models.Model):
             oauth_app = oauth_app_auth_code.oauth_app_token_id.oauth_app_id
         return oauth_app
     
+    def action_generate_auth_code(self): 
+        self.ensure_one()       
+        res_field = 'auth_code'
+        oauth_app_id = self.oauth_app_token_id.oauth_app_id
+        expire = oauth_app_id.expiry_auth_code
+        self.env['rest.oauth.token'].action_generate_field_token(res_models=self, res_field=res_field, expire=expire)
     
+    def action_invalid(self): 
+        self.write({'state': 'invalid'})
+        
+        
+        

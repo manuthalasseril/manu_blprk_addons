@@ -20,12 +20,36 @@ class RestOuthApplicationToken(models.Model):
     access_token = fields.Many2one('rest.oauth.token', readonly=True, copy=False)
     expiry_access_token = fields.Datetime(related='access_token.expire', compute_sudo=True, readonly=True, copy=False)
     refresh_token = fields.Many2one('rest.oauth.token', readonly=True, copy=False)
-    expiry_refresh_token = fields.Datetime(related='refresh_token.expire', compute_sudo=True, readonly=True, copy=False)    
+    expiry_refresh_token = fields.Datetime(related='refresh_token.expire', compute_sudo=True, readonly=True, copy=False)
+    state = fields.Selection([
+        ('valid', 'Valid'),
+        ('invalid', 'Invalid'),
+        ], string='Status', readonly=True, copy=False, default='valid')    
     
     _sql_constraints = [
         ('access_token_uniq', 'unique (access_token)', 'The access_token must be unique!'),
         ('refresh_token_uniq', 'unique (refresh_token)', 'The refresh_token must be unique!'),
-    ]   
+    ]
+
+    @api.model
+    def check_access_token(self, access_token):
+        today = fields.Datetime.now()
+        oauth_app_token = self.search([
+                            ('state', '=', 'valid'),
+                            ('access_token.token', '=', access_token),
+                            ('access_token.expire', '>', today),
+                        ])
+        return oauth_app_token
+
+    @api.model
+    def check_refresh_token(self, refresh_token):
+        today = fields.Datetime.now()
+        oauth_app_token = self.search([
+                            ('state', '=', 'valid'),
+                            ('refresh_token.token', '=', refresh_token),
+                            ('refresh_token.expire', '>', today),
+                        ])
+        return oauth_app_token
     
     def action_generate_access_token(self): 
         self.ensure_one()       
@@ -50,5 +74,10 @@ class RestOuthApplicationToken(models.Model):
                 'refresh_token': oauth_app_token.refresh_token.token,
             }
         return res
+    
+    def action_invalid(self): 
+        self.write({'state': 'invalid'})
+        
+        
     
         

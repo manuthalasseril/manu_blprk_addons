@@ -47,6 +47,7 @@ class RestOuthToken(models.Model):
     @api.model
     def get_res_vals(self, res_model, res_field=None):
         res_model.ensure_one()
+        res_model = res_model.sudo()
         vals = {
                 'res_id': res_model.id,
                 'res_model_id': res_model.env['ir.model']._get(res_model._name).id
@@ -135,7 +136,7 @@ class RestOuthApplication(models.Model):
     def get_basic_decode_auth_header(self, client_pass): 
         client_id, client_secret = '', ''
         try:
-            client_pass.split(' ')[1] 
+            client_pass = client_pass.split(' ')[1] 
             client_pass = b64decode(client_pass.encode("utf-8"))
             client_pass = client_pass.decode("utf-8")
             client_pass = client_pass.split(':')
