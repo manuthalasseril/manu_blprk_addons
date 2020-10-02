@@ -103,10 +103,6 @@ class CredTokenService(Component):
                 oauth_app_token.action_generate_access_token()
                 oauth_app_token.action_generate_refresh_token()
                 token_vals = oauth_app_token.get_token_vals(oauth_app_token.id)
-                token_vals.update({
-                            'user_context': request.session.get_context(),
-                            'company_id': self.env.user.company_id.id if uid else 'null',
-                        })
                 return {            
                         'name': _("OK"),
                         'code': 200,
@@ -149,24 +145,6 @@ class CredTokenService(Component):
                                     'coerce': to_int,
                                     'required': True
                                     },
-                        'company_id': {                                    
-                                    'type': 'integer',
-                                    'coerce': to_int,
-                                    'required': True
-                                },
-                        'user_context': {
-                                'type': 'dict',
-                                'required': True,                
-                                'schema': {
-                                    'uid': {                                    
-                                        'type': 'integer',
-                                        'coerce': to_int,
-                                        'required': True,   
-                                    },
-                                    'lang': {'type': 'string', 'required': True,},
-                                    'tz': {'type': 'string', 'required': True,},
-                                },                            
-                            },
                         },
                     }
                 }
