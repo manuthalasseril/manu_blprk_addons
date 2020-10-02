@@ -16,6 +16,7 @@
         'security/ir.model.access.csv',
         'views/oauth_app.xml',
         'views/oauth_app_token.xml',
+        'views/oauth_app_auth_code.xml',
         'views/menu.xml',
     ],
     'installable': True,

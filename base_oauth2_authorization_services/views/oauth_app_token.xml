@@ -14,6 +14,7 @@
 					<field name="expiry_access_token" />
 					<field name="refresh_token" />
 					<field name="expiry_refresh_token" />
+					<field name="state" />
 				</tree>
 			</field>
 		</record>
@@ -29,6 +30,7 @@
 					<field name="location_uri" />
 					<field name="access_token" />
 					<field name="refresh_token" />
+					<field name="state" />
 				</search>
 			</field>
 		</record>

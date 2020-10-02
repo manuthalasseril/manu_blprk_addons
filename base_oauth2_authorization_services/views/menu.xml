@@ -8,8 +8,11 @@
 		<menuitem id="menu_rest_oauth_app" name="Oauth Application"
 			parent="menu_rest_api" sequence="10" action="action_rest_auth_app" />
 
-		<!-- <menuitem id="menu_rest_oauth_app_token" nam_tokene="Oauth Application Tokens"
-			parent="menu_rest_api" sequence="20" action="action_rest_auth_app_token" /> -->
+		<menuitem id="menu_rest_oauth_app_token" name="Oauth Application Tokens"
+			parent="menu_rest_api" sequence="20" action="action_rest_auth_app_token" />
+
+		<menuitem id="menu_rest_oauth_app_auth_code" name="Oauth Application Auth Codes"
+			parent="menu_rest_api" sequence="30" action="action_rest_auth_app_auth_code" />
 			
 	</data>
 </odoo>

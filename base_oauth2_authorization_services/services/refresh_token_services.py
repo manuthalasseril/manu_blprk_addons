@@ -87,7 +87,7 @@ class RefreshTokenService(Component):
             OuthAppToken = self.env['rest.oauth.app.token']                          
             oauth_app_token = OuthAppToken.check_refresh_token(refresh_token)
             if not oauth_app_token:
-                info = _("The refresh_token is either expired or not found!")
+                info = _("The refresh_token is expired or not found or invalid!")
                 _logger.error(info)
                 raise http.SessionExpiredException(info)
             user = oauth_app_token.user_id

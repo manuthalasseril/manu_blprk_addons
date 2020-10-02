@@ -147,7 +147,7 @@ class RestAuth(http.Controller):
             OuthAppAuthCode = request.env['rest.oauth.app.auth.code']
             oauth_app = OuthAppAuthCode.get_oauthapp_auth_code(code) 
             if not oauth_app:
-                error_msg = _('The auth code is either expired or not found')
+                error_msg = _('The auth code is expired or not found or invalid!')
                 _logger.error(error_msg)  
                 return self.generate_response(http_status_codes['unauthorized'], error_msg)
             auth_redirect_uri = urljoin(redirect_uri, urlparse(redirect_uri).path)
@@ -225,7 +225,7 @@ class RestAuth(http.Controller):
             OuthAppAuthCode = request.env['rest.oauth.app.auth.code']
             oauth_app = OuthAppAuthCode.get_oauthapp_auth_code(code) 
             if not oauth_app:
-                error_msg = _('The auth code is either expired or not found')
+                error_msg = _('The auth code is expired or not found or invalid!')
                 _logger.error(error_msg)  
                 return self.generate_response(http_status_codes['unauthorized'], error_msg)
             auth_redirect_uri = urljoin(redirect_uri, urlparse(redirect_uri).path)
@@ -269,7 +269,7 @@ class RestAuth(http.Controller):
             OuthAppToken = request.env['rest.oauth.app.token']
             oauth_app_token = OuthAppToken.check_access_token(access_token) 
             if not oauth_app_token:
-                error_msg = _('The access_token is either expired or not found')
+                error_msg = _('The access_token is expired or not found or invalid!')
                 _logger.error(error_msg)  
                 return self.generate_response(http_status_codes['unauthorized'], error_msg)
             valid_vals = {'valid': True}
@@ -294,7 +294,7 @@ class RestAuth(http.Controller):
             OuthAppToken = request.env['rest.oauth.app.token']
             oauth_app_token = OuthAppToken.check_access_token(access_token) 
             if not oauth_app_token:
-                error_msg = _('The access_token is either expired or not found')
+                error_msg = _('The access_token is expired or not found or invalid!')
                 _logger.error(error_msg)  
                 return self.generate_response(http_status_codes['unauthorized'], error_msg)
             user_vals = oauth_app_token.get_user_vals(access_token)
